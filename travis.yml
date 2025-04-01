@@ -1,0 +1,27 @@
+sudo: required
+service: 
+  - docker
+
+before_install: 
+  - docker build -t saifulishaq/hello-world -f Dockerfile-location/Dockerfile ./build-context
+
+script:
+  - docker run -e CI=true saifulishaq/hello-world npm run test
+
+after_success: 
+  - docker build -t saifulishaq/hello-world ./build-context
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin 
+  - docker push saifulishaq/hello-world
+
+deploy:
+  provider: elasticbeanstalk
+  region: "eu-west-1"
+  app: "multi-docker"
+  env: "Multi-docker-env"
+  bucket_name: "elasticbeanstalk-eu-west-1-977083441270"
+  bucket_path: "multi-docker"
+  on: 
+    branch: main
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key: "$AWS_SECRET_KEY"
